@@ -1,13 +1,48 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Collab Site</title>
-    <link rel="stylesheet" href="styles.css">
-  </head>
-  <body>
-    <h1>Hello, world!</h1>
-    <p>This is our first collab website </p>
-    <script src="app.js"></script>
-  </body>
-</html>
+<body>
+  <h1>Products</h1>
+
+  <button id="load">Load products</button>
+
+  <form id="addForm" style="margin-top:1rem">
+    <input name="name" placeholder="name" required />
+    <input name="priceCents" type="number" placeholder="price (cents)" required />
+    <input name="stock" type="number" placeholder="stock" required />
+    <button type="submit">Add</button>
+  </form>
+
+  <pre id="out"></pre>
+
+  <script>
+    const API = 'https://store-svc-go.onrender.com';
+
+    const out = document.getElementById('out');
+    document.getElementById('load').addEventListener('click', async () => {
+      const res = await fetch(API + '/products');
+      const data = await res.json();
+      out.textContent = JSON.stringify(data, null, 2);
+    });
+
+    document.getElementById('addForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const body = {
+        name: fd.get('name'),
+        priceCents: Number(fd.get('priceCents')),
+        stock: Number(fd.get('stock')),
+      };
+      const res = await fetch(API + '/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        out.textContent = 'Add failed: ' + (await res.text());
+        return;
+      }
+      // reload after add
+      const list = await (await fetch(API + '/products')).json();
+      out.textContent = JSON.stringify(list, null, 2);
+      e.target.reset();
+    });
+  </script>
+</body>
